@@ -31,10 +31,45 @@ build_toolchain() {
   ninja -C "$TOOLCHAIN_BUILD/optimized" install
 
   cd "$TOOLCHAIN_PREFIX/bin"
+  llvm_version="$(./clang -dumpversion)"
+  llvm_major="${llvm_version%%.*}"
+  case "$llvm_major" in
+    ''|*[!0-9]*) die "could not determine installed Clang major version: $llvm_version" ;;
+  esac
   for tool in clang clang++ llvm-ar llvm-nm llvm-objcopy llvm-objdump llvm-ranlib llvm-readelf llvm-strip; do
+    # Clang may already install clang-$llvm_major as the real binary.
+    [ -e "$tool-$llvm_major" ] || ln -s "$tool" "$tool-$llvm_major"
     ln -sf "$tool" "$TARGET-$tool"
     ln -sf "$tool" "aarch64-linux-musl-$tool"
   done
+  [ -e "ld.lld-$llvm_major" ] || ln -s ld.lld "ld.lld-$llvm_major"
   ln -sf ld.lld "$TARGET-ld"
   ln -sf ld.lld "aarch64-linux-musl-ld"
+
+  python3 - "$PROJ/cross.env" "$llvm_major" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+major = sys.argv[2]
+tools = {
+    "CC": "clang",
+    "CXX": "clang++",
+    "AR": "llvm-ar",
+    "NM": "llvm-nm",
+    "RANLIB": "llvm-ranlib",
+    "STRIP": "llvm-strip",
+    "LD": "ld.lld",
+}
+text = path.read_text()
+for variable, tool in tools.items():
+    text, count = re.subn(
+        rf'^export {variable}=.*$', f'export {variable}="{tool}-{major}"',
+        text, flags=re.MULTILINE,
+    )
+    if count != 1:
+        sys.exit(f"expected exactly one export {variable} in {path}")
+path.write_text(text)
+PY
 }

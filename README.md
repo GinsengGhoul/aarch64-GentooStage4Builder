@@ -40,6 +40,7 @@ sudo ./imageBuilder.sh bootstrap  # Extract stage 3, copy configuration and QEMU
 `bootstrap` extracts over `dev/`; it does not clear an existing root first. The toolchain's default sysroot is the absolute path to `dev/` at build time.
 
 The toolchain build uses LLVM's PGO helper, `-O3`, `-ffast-math`, and ThinLTO. PGO builds several compiler stages and runs LLVM/Clang tests and a training build, so it requires substantially more time and disk space than a single build. The helper replaces its stage directories under `toolchain/build/` on each run.
+After installation, it creates versioned tool aliases as needed and updates the compiler and binutils exports in `cross.env` to the installed Clang major version. Re-source `cross.env` after rebuilding the toolchain.
 
 Alternatively, `sudo ./imageBuilder.sh setup` runs bootstrap followed by toolchain installation, both as root. Run the individual commands above if the toolchain should be owned by your user.
 
