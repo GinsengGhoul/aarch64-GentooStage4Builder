@@ -1,0 +1,3 @@
+[submodule "toolchain/src/llvm-project"]
+	path = toolchain/src/llvm-project
+	url = https://github.com/llvm/llvm-project.git

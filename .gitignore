@@ -1,0 +1,8 @@
+/stage3-*.tar.*
+/binpkgs/
+/dev/
+/dist/
+/toolchain/build/
+/toolchain/install/
+/aarch64-dist.squashfs
+/aarch64-dev-stage4.tar.zst
